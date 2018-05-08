@@ -5,7 +5,7 @@ Selenide download file test
 
     mvn clean test -Dselenide.browser=chrome -Dselenide.timeout=55000 -DdownloadFolderPath=/home/agr/github/files/
 
-Expected path: /home/agr/github/files/SpeedTest_16MB.md5
+Expected path: /home/agr/github/files/SpeedTest_16MB.md5<br/>
 Actual path: build/reports/tests/pub/speed/SpeedTest_16MB.md5
 
 **Output:**
