@@ -28,8 +28,8 @@ public class DownloadTest {
         }
     }
 
-    @Test
-    public void DownloadFile() throws FileNotFoundException {
+    @Test(enabled = false)
+    public void DownloadFileBySelenide() throws FileNotFoundException {
         System.out.println(String.format("Folder \"%s\" exists: %s", downloadFolderPath, new File(downloadFolderPath).exists()));
 
         File extraSmallFileMD5 = $("table tbody tr:nth-child(1) td.last a").download();
@@ -38,5 +38,25 @@ public class DownloadTest {
         System.out.println(String.format("Downloaded file size: %d bytes", extraSmallFileMD5.length()));
 
         extraSmallFileMD5.delete();
+    }
+
+    @Test(enabled = true)
+    public void DownloadFileByClick() throws FileNotFoundException, InterruptedException {
+        File downloadFolder = new File(downloadFolderPath);
+
+        System.out.println(String.format("Directory \"%s\" exists: %s", downloadFolder.getAbsolutePath(), downloadFolder.exists()));
+        System.out.println(String.format("Path \"%s\" is directory: %s", downloadFolder.getAbsolutePath(), downloadFolder.isDirectory()));
+
+        $("table tbody tr:nth-child(1) td.last a").click();
+
+        Thread.sleep(5000);
+
+        File expectedDownloadedFile = new File(downloadFolder.getAbsolutePath() + "/SpeedTest_16MB.md5");
+        File actualDownloadedFile = new File(System.getProperty("user.home") + "/Downloads/" + "SpeedTest_16MB.md5");
+
+        System.out.println(String.format("Expected downloaded file \"%s\" exists: %s", expectedDownloadedFile.getAbsoluteFile(), expectedDownloadedFile.exists()));
+        System.out.println(String.format("Actual downloaded file \"%s\" exists: %s", actualDownloadedFile.getAbsoluteFile(), actualDownloadedFile.exists()));
+
+        actualDownloadedFile.delete();
     }
 }
