@@ -21,11 +21,17 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Created by a.gridyaev on 5/8/18.
  */
 public class DownloadTest {
-    private void printHar(Har har) {
-        List<HarEntry> entries = har.getLog().getEntries();
-        for (HarEntry entry : entries) {
-            System.out.println(entry.getRequest().getUrl());
+    private static final String TEST_URL = "https://www.adam.com.au/support/blank-test-files";
+    private static final String DOWNLOAD_SELECTOR = "table tbody tr:nth-child(1) td.last a";
+
+    private static File downloadFile() {
+        File expectedDownloadedFile = null;
+        try {
+            expectedDownloadedFile = $(DOWNLOAD_SELECTOR).download();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+        return expectedDownloadedFile;
     }
 
     @BeforeMethod
@@ -43,14 +49,9 @@ public class DownloadTest {
     @Test
     public void DownloadFileByHTTP() {
         Configuration.fileDownload = FileDownloadMode.HTTPGET;
-        open("https://www.adam.com.au/support/blank-test-files");
+        open(TEST_URL);
 
-        File expectedDownloadedFile = null;
-        try {
-            expectedDownloadedFile = $("table tbody tr:nth-child(1) td.last a").download();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
+        File expectedDownloadedFile = downloadFile();
 
         assertThat(expectedDownloadedFile).isFile();
     }
@@ -58,17 +59,9 @@ public class DownloadTest {
     @Test
     public void DownloadFileByProxy() {
         Configuration.fileDownload = FileDownloadMode.PROXY;
-//        open("https://www.adam.com.au/support/blank-test-files");
-        open("https://www.engineerhammad.com/2015/04/Download-Test-Files.html");
+        open(TEST_URL);
 
-        File expectedDownloadedFile = null;
-        try {
-            expectedDownloadedFile = $("tbody tr:nth-child(2) td:nth-child(3) a:nth-child(2)").download();
-//            expectedDownloadedFile = $("table tbody tr:nth-child(1) td.last a").download(30000);
-//            expectedDownloadedFile = Selenide.download("http://mirror.filearena.net/pub/speed/SpeedTest_16MB.md5");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        File expectedDownloadedFile = downloadFile();
 
         assertThat(expectedDownloadedFile).isFile();
     }
