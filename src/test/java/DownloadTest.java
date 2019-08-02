@@ -1,10 +1,7 @@
-import com.codeborne.selenide.proxy.SelenideProxyServer;
-import net.lightbody.bmp.BrowserMobProxy;
-import net.lightbody.bmp.BrowserMobProxyServer;
+import com.codeborne.selenide.Configuration;
+import com.codeborne.selenide.FileDownloadMode;
 import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.core.har.HarEntry;
-import net.lightbody.bmp.filters.RequestFilter;
-import org.testng.Assert;
 import org.testng.ITestContext;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -12,33 +9,28 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.io.IOException;
 import java.util.List;
 
 import static com.codeborne.selenide.Selenide.$;
-import static com.codeborne.selenide.WebDriverRunner.getSelenideProxy;
+import static com.codeborne.selenide.Selenide.open;
 import static com.codeborne.selenide.WebDriverRunner.getWebDriver;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Created by a.gridyaev on 5/8/18.
  */
 public class DownloadTest {
-    private BrowserMobProxy proxy;
-    private URL testUrl;
-    {
-        try {
-            testUrl = new URL("https://www.adam.com.au/support/blank-test-files");
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
+    private void printHar(Har har) {
+        List<HarEntry> entries = har.getLog().getEntries();
+        for (HarEntry entry : entries) {
+            System.out.println(entry.getRequest().getUrl());
         }
     }
 
-    private static final String downloadFolderPath = System.getProperty("downloadFolderPath");
-
     @BeforeMethod
     public void setUp() {
-        proxy = DriverManager.initDriver(testUrl, downloadFolderPath);
+        DriverManager.initDriverWithMobProxy();
     }
 
     @AfterMethod
@@ -48,39 +40,36 @@ public class DownloadTest {
         }
     }
 
-    @Test(enabled = false)
-    public void DownloadFileBySelenide() throws FileNotFoundException {
-        System.out.println(String.format("Folder \"%s\" exists: %s", downloadFolderPath, new File(downloadFolderPath).exists()));
+    @Test
+    public void DownloadFileByHTTP() {
+        Configuration.fileDownload = FileDownloadMode.HTTPGET;
+        open("https://www.adam.com.au/support/blank-test-files");
 
-        File extraSmallFileMD5 = $("table tbody tr:nth-child(1) td.last a").download();
-
-        System.out.println(String.format("Downloaded file path: %s", extraSmallFileMD5.getAbsolutePath()));
-        System.out.println(String.format("Downloaded file size: %d bytes", extraSmallFileMD5.length()));
-
-        Assert.assertTrue(extraSmallFileMD5.delete());
-    }
-
-    @Test(enabled = true)
-    public void DownloadFileByClick() {
-        File downloadFolder = new File(downloadFolderPath);
-
-        System.out.println(String.format("Directory \"%s\" exists: %s", downloadFolder.getAbsolutePath(), downloadFolder.exists()));
-        System.out.println(String.format("Path \"%s\" is directory: %s", downloadFolder.getAbsolutePath(), downloadFolder.isDirectory()));
-
-        proxy.newHar(testUrl.getHost());
-        $("table tbody tr:nth-child(1) td.last a").click();
-        Har har = proxy.getHar();
-        List<HarEntry> entries = har.getLog().getEntries();
-        for (HarEntry entry : entries) {
-            System.out.println(entry.getRequest().getUrl());
+        File expectedDownloadedFile = null;
+        try {
+            expectedDownloadedFile = $("table tbody tr:nth-child(1) td.last a").download();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         }
 
-        File expectedDownloadedFile = new File(downloadFolder.getAbsolutePath() + "/SpeedTest_16MB.md5");
-        File actualDownloadedFile = new File(System.getProperty("user.home") + "/Downloads/" + "SpeedTest_16MB.md5");
+        assertThat(expectedDownloadedFile).isFile();
+    }
 
-        System.out.println(String.format("Expected downloaded file \"%s\" exists: %s", expectedDownloadedFile.getAbsoluteFile(), expectedDownloadedFile.exists()));
-        System.out.println(String.format("Actual downloaded file \"%s\" exists: %s", actualDownloadedFile.getAbsoluteFile(), actualDownloadedFile.exists()));
+    @Test
+    public void DownloadFileByProxy() {
+        Configuration.fileDownload = FileDownloadMode.PROXY;
+//        open("https://www.adam.com.au/support/blank-test-files");
+        open("https://www.engineerhammad.com/2015/04/Download-Test-Files.html");
 
-        Assert.assertTrue(actualDownloadedFile.delete());
+        File expectedDownloadedFile = null;
+        try {
+            expectedDownloadedFile = $("tbody tr:nth-child(2) td:nth-child(3) a:nth-child(2)").download();
+//            expectedDownloadedFile = $("table tbody tr:nth-child(1) td.last a").download(30000);
+//            expectedDownloadedFile = Selenide.download("http://mirror.filearena.net/pub/speed/SpeedTest_16MB.md5");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        assertThat(expectedDownloadedFile).isFile();
     }
 }
