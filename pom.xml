@@ -9,7 +9,6 @@
     <version>1.0</version>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <selenide.browser>chrome</selenide.browser>
     </properties>
     <build>
         <plugins>
@@ -30,15 +29,6 @@
                     <suiteXmlFiles>
                         <file>src/main/suites/DownloadTest.xml</file>
                     </suiteXmlFiles>
-                    <properties>
-                        <property>
-                            <name>surefire.testng.verbose</name>
-                            <value>0</value>
-                        </property>
-                    </properties>
-                    <systemProperties>
-                        <selenide.browser>${selenide.browser}</selenide.browser>
-                    </systemProperties>
                 </configuration>
             </plugin>
         </plugins>
